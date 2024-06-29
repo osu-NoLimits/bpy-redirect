@@ -1,5 +1,6 @@
 const express = require('express');
 const morgan = require('morgan');
+const axios = require('axios').default;
 require('dotenv').config();
 
 const app = express();
@@ -7,7 +8,9 @@ const app = express();
 const HOST = process.env.HOST;
 const PORT = process.env.PORT;
 const REDIRECT_IP = process.env.REDIRECT_IP;
+const API_URL = process.env.API_URL;
 const SETTINGS_URL = process.env.SETTINGS_URL;
+const GUCCHO_MODE = parseBoolean(process.env.GUCCHO_MODE);
 
 const colors = {
     reset: '\x1b[0m',
@@ -46,25 +49,101 @@ app.get('/u/:userid', (req, res) => {
     res.redirect(301, `${REDIRECT_IP}/u/${userid}`);
 });
 
-app.get('/beatmapsets/:beatmap/discussion', (req, res) => {
+app.get('/beatmapsets/:beatmap/discussion', async (req, res) => {
     const { beatmap } = req.params;
-    res.redirect(301, `${REDIRECT_IP}/beatmaps/${beatmap}`);
+
+    if (GUCCHO_MODE) {
+        try {
+            const response = await axios.get(`${API_URL}/v1/get_map_info?id=${beatmap}`);
+            const mapInfo = response.data.map;
+
+            if (response.data.status === 'Map not found.') {
+                return res.status(404).send('Map not found.');
+            }
+
+            res.redirect(301, `${REDIRECT_IP}/beatmapset/${mapInfo.set_id}?beatmap=${beatmap}`);
+        } catch (error) {
+            console.error('Error fetching map info:', error.message);
+            res.status(500).send('Internal Server Error');
+        }
+    } else {
+        res.redirect(301, `${REDIRECT_IP}/b/${beatmap}`);
+    }
 });
 
-app.get('/beatmaps/:beatmap', (req, res) => {
-    const { beatmap } = req.params;
-    res.redirect(301, `${REDIRECT_IP}/beatmaps/${beatmap}`);
+app.get('/beatmapsets/:set_id/discussion/:beatmap', async (req, res) => {
+    const { beatmap, set_id } = req.params;
+
+    if (GUCCHO_MODE) {
+
+        res.redirect(301, `${REDIRECT_IP}/beatmapset/${set_id}?beatmap=${beatmap}`);
+        return;
+    }
+    
+    res.redirect(301, `${REDIRECT_IP}/b/${beatmap}`);
 });
 
-app.get('/beatmapsets/:beatmap', (req, res) => {
+
+app.get('/beatmaps/:beatmap', async (req, res) => {
     const { beatmap } = req.params;
-    res.redirect(301, `${REDIRECT_IP}/beatmaps/${beatmap}`);
+
+    if (GUCCHO_MODE) {
+        try {
+            const response = await axios.get(`${API_URL}/v1/get_map_info?id=${beatmap}`);
+            const mapInfo = response.data.map;
+
+            if (response.data.status === 'Map not found.') {
+                return res.status(404).send('Map not found.');
+            }
+
+            res.redirect(301, `${REDIRECT_IP}/beatmapset/${mapInfo.set_id}?beatmap=${beatmap}`);
+        } catch (error) {
+            console.error('Error fetching map info:', error.message);
+            res.status(500).send('Internal Server Error');
+        }
+    } else {
+        res.redirect(301, `${REDIRECT_IP}/b/${beatmap}`);
+    }
+});
+
+app.get('/beatmapsets/:beatmap', async (req, res) => {
+    const { beatmap } = req.params;
+
+    if (GUCCHO_MODE) {
+        try {
+            const response = await axios.get(`${API_URL}/v1/get_map_info?id=${beatmap}`);
+            const mapInfo = response.data.map;
+
+            res.redirect(301, `${REDIRECT_IP}/beatmapset/${mapInfo.set_id}?beatmap=${beatmap}`);
+        } catch (error) {
+            console.error('Error fetching map info:', error.message);
+            res.status(500).send('Internal Server Error');
+        }
+    } else {
+        res.redirect(301, `${REDIRECT_IP}/b/${beatmap}`);
+    }
 });
 
 app.get('/home/account/edit', (req, res) => {
     res.redirect(301, `${REDIRECT_IP}${SETTINGS_URL}`);
 });
 
-app.listen(PORT, HOST, () => {
+const server = app.listen(PORT, HOST, () => {
     console.log(`Server is running on http://${HOST}:${PORT}`);
 });
+
+const shutdown = () => {
+    console.log('Shutting down server...');
+    server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
+    });
+};
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
+function parseBoolean(str) {
+    if (str === 'true') return true;
+    return false;
+}
