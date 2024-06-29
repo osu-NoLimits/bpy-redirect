@@ -26,7 +26,8 @@ Use this to setup the right ingame redirects for your <a href="https://github.co
 :heavy_check_mark: /beatmapsets/:beatmap/discussion\
 :heavy_check_mark: /beatmapsets/:set_id/discussion/:beatmap\
 :heavy_check_mark: /beatmaps/:beatmap\
-:heavy_check_mark: /beatmapsets/:beatmap
+:heavy_check_mark: /beatmapsets/:beatmap\
+:heavy_check_mark: /home/account/edit
 
 
 ## :white_check_mark: Requirements ##
