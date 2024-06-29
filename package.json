@@ -1,0 +1,25 @@
+{
+  "name": "bpy-redirect",
+  "version": "1.0.0",
+  "description": "The easiest way to setup all working redirects to your main page",
+  "main": "app.js",
+  "scripts": {
+    "serve": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/osu-NoLimits/bpy-redirect.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/osu-NoLimits/bpy-redirect/issues"
+  },
+  "homepage": "https://github.com/osu-NoLimits/bpy-redirect#readme",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "morgan": "^1.10.0"
+  }
+}
